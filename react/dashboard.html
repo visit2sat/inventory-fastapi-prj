@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inventory UI (OpenAPI)</title>
+  <style>
+    body{font-family: Arial, sans-serif;margin:0;color:#222}
+    header{background:#0b5; padding:14px;color:#000}
+    nav{width:220px;background:#f4f4f4;height:calc(100vh - 56px);padding:12px;box-sizing:border-box;}
+    main{padding:16px;flex:1}
+    .layout{display:flex}
+    .hidden{display:none}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid #ddd;padding:8px}
+    th{background:#eee}
+    .btn{padding:6px 10px;margin:2px;cursor:pointer}
+    .form-row{margin-bottom:8px}
+    .topbar{display:flex;justify-content:space-between;align-items:center}
+    .error{color:#b00}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div><strong>Inventory Management — UI</strong></div>
+      <div id="userInfo"></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav>
+      <button class="btn" onclick="show('productsView')">Products</button>
+      <button class="btn" onclick="show('categoriesView')">Categories</button>
+      <button class="btn" onclick="show('suppliersView')">Suppliers</button>
+      <button class="btn" onclick="show('usersView')">Users</button>
+      <hr/>
+      <div id="authArea">
+        <h4>Authentication</h4>
+        <div id="loginBox">
+          <div class="form-row"><input id="username" placeholder="username" /></div>
+          <div class="form-row"><input id="password" type="password" placeholder="password" /></div>
+          <div class="form-row"><button class="btn" onclick="login()">Login</button></div>
+          <div id="loginError" class="error"></div>
+        </div>
+        <div id="logoutBox" class="hidden">
+          <div>Logged in as <span id="loggedUser"></span></div>
+          <button class="btn" onclick="logout()">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <!-- Products View -->
+      <section id="productsView" class="view">
+        <h2>Products</h2>
+        <div>
+          <button class="btn" onclick="loadProducts()">Refresh</button>
+          <button class="btn" onclick="showProductForm()">Add Product</button>
+        </div>
+        <div id="productsTable"></div>
+
+        <div id="productForm" class="hidden">
+          <h3 id="productFormTitle">Add Product</h3>
+          <div class="form-row"><input id="p_ProductID" type="hidden" /></div>
+          <div class="form-row"><input id="p_ProductName" placeholder="ProductName" /></div>
+          <div class="form-row"><input id="p_SKU" placeholder="SKU" /></div>
+          <div class="form-row"><input id="p_Description" placeholder="Description" /></div>
+          <div class="form-row"><input id="p_QuantityInStock" type="number" placeholder="QuantityInStock" /></div>
+          <div class="form-row"><input id="p_UnitPrice" type="number" step="0.01" placeholder="UnitPrice" /></div>
+          <div class="form-row"><input id="p_CategoryID" type="number" placeholder="CategoryID" /></div>
+          <div class="form-row"><input id="p_SupplierID" type="number" placeholder="SupplierID" /></div>
+          <div>
+            <button class="btn" onclick="saveProduct()">Save</button>
+            <button class="btn" onclick="hideProductForm()">Cancel</button>
+          </div>
+          <div id="productFormMsg"></div>
+        </div>
+      </section>
+
+      <!-- Categories View -->
+      <section id="categoriesView" class="view hidden">
+        <h2>Categories</h2>
+        <div>
+          <button class="btn" onclick="loadCategories()">Refresh</button>
+          <button class="btn" onclick="showCategoryForm()">Add Category</button>
+        </div>
+        <div id="categoriesTable"></div>
+        <div id="categoryForm" class="hidden">
+          <h3 id="categoryFormTitle">Add Category</h3>
+          <input id="c_CategoryID" type="hidden" />
+          <div class="form-row"><input id="c_CategoryName" placeholder="CategoryName" /></div>
+          <div class="form-row"><input id="c_Description" placeholder="Description" /></div>
+          <div>
+            <button class="btn" onclick="saveCategory()">Save</button>
+            <button class="btn" onclick="hideCategoryForm()">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Suppliers View -->
+      <section id="suppliersView" class="view hidden">
+        <h2>Suppliers</h2>
+        <div>
+          <button class="btn" onclick="loadSuppliers()">Refresh</button>
+          <button class="btn" onclick="showSupplierForm()">Add Supplier</button>
+        </div>
+        <div id="suppliersTable"></div>
+        <div id="supplierForm" class="hidden">
+          <h3 id="supplierFormTitle">Add Supplier</h3>
+          <input id="s_SupplierID" type="hidden" />
+          <div class="form-row"><input id="s_SupplierName" placeholder="SupplierName" /></div>
+          <div class="form-row"><input id="s_ContactName" placeholder="ContactName" /></div>
+          <div class="form-row"><input id="s_Phone" placeholder="Phone" /></div>
+          <div class="form-row"><input id="s_Email" placeholder="Email" /></div>
+          <div class="form-row"><input id="s_Address" placeholder="Address" /></div>
+          <div class="form-row"><input id="s_City" placeholder="City" /></div>
+          <div class="form-row"><input id="s_Country" placeholder="Country" /></div>
+          <div>
+            <button class="btn" onclick="saveSupplier()">Save</button>
+            <button class="btn" onclick="hideSupplierForm()">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Users View -->
+      <section id="usersView" class="view hidden">
+        <h2>Users</h2>
+        <div>
+          <button class="btn" onclick="loadUsers()">Refresh</button>
+          <button class="btn" onclick="showUserForm()">Add User</button>
+        </div>
+        <div id="usersTable"></div>
+        <div id="userForm" class="hidden">
+          <h3 id="userFormTitle">Add User</h3>
+          <input id="u_UserID" type="hidden" />
+          <div class="form-row"><input id="u_FirstName" placeholder="FirstName" /></div>
+          <div class="form-row"><input id="u_LastName" placeholder="LastName" /></div>
+          <div class="form-row"><input id="u_Email" placeholder="Email" /></div>
+          <div class="form-row"><input id="u_Phone" placeholder="Phone" /></div>
+          <div class="form-row"><input id="u_Username" placeholder="Username" /></div>
+          <div class="form-row"><input id="u_Password" type="password" placeholder="Password" /></div>
+          <div class="form-row"><input id="u_Role" placeholder="Role" /></div>
+          <div>
+            <button class="btn" onclick="saveUser()">Save</button>
+            <button class="btn" onclick="hideUserForm()">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Path to uploaded OpenAPI file (the platform will serve this path as a URL)
+    const OPENAPI_URL = '/mnt/data/openapi.json';
+
+    // Base URL for the real API server - will be read from OpenAPI servers if present
+    let API_BASE = '';
+    let token = localStorage.getItem('ims_token') || '';
+
+    async function init() {
+      // load openapi json to discover server
+      try {
+        const r = await fetch(OPENAPI_URL);
+        const spec = await r.json();
+        // attempt to read first server url
+        if (spec.servers && spec.servers.length) API_BASE = spec.servers[0].url.replace(/\/$/, "");
+      } catch (e) {
+        console.warn('Could not read openapi file at', OPENAPI_URL);
+      }
+      if(!API_BASE) API_BASE = prompt('Enter API base URL (e.g. http://127.0.0.1:8000/)', 'http://127.0.0.1:8000');
+
+      updateAuthUI();
+      show('productsView');
+      loadProducts();
+    }
+
+    function updateAuthUI(){
+      if(token){
+        document.getElementById('loginBox').classList.add('hidden');
+        document.getElementById('logoutBox').classList.remove('hidden');
+        document.getElementById('loggedUser').textContent = 'user';
+        document.getElementById('userInfo').textContent = 'Authenticated';
+      } else {
+        document.getElementById('loginBox').classList.remove('hidden');
+        document.getElementById('logoutBox').classList.add('hidden');
+        document.getElementById('userInfo').textContent = '';
+      }
+    }
+
+    function show(id){
+      document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    // ---------- AUTH ----------
+    async function login(){
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const form = new URLSearchParams();
+      form.append('username', username);
+      form.append('password', password);
+      form.append('grant_type', 'password');
+
+      try{
+        const res = await fetch(API_BASE + '/auth/login', {
+          method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:form
+        });
+        if(!res.ok) { document.getElementById('loginError').textContent = 'Login failed'; return; }
+        const data = await res.json();
+        // expect access_token in response
+        token = data.access_token || data.token || '';
+        localStorage.setItem('ims_token', token);
+        document.getElementById('loginError').textContent = '';
+        updateAuthUI();
+      }catch(e){
+        document.getElementById('loginError').textContent = 'Login error';
+      }
+    }
+    function logout(){ token=''; localStorage.removeItem('ims_token'); updateAuthUI(); }
+
+    function authHeaders(){
+      return token ? { 'Authorization': 'Bearer '+token, 'Content-Type':'application/json' } : { 'Content-Type':'application/json' };
+    }
+
+    // ---------- PRODUCTS ----------
+    async function loadProducts(){
+      const res = await fetch(API_BASE + '/products/', { headers: authHeaders() });
+      const data = await res.json();
+      renderProducts(data);
+    }
+
+    function renderProducts(products){
+      const container = document.getElementById('productsTable');
+      if(!products || !products.length) { container.innerHTML = '<p>No products</p>'; return; }
+      let html = '<table><thead><tr><th>ID</th><th>Name</th><th>SKU</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead><tbody>';
+      products.forEach(p=>{
+        html += `<tr>
+          <td>${p.ProductID}</td>
+          <td>${escapeHtml(p.ProductName)}</td>
+          <td>${escapeHtml(p.SKU)}</td>
+          <td>${p.UnitPrice}</td>
+          <td>${p.QuantityInStock}</td>
+          <td>
+            <button class="btn" onclick='getProduct(${p.ProductID})'>View</button>
+            <button class="btn" onclick='startEditProduct(${p.ProductID})'>Edit</button>
+            <button class="btn" onclick='deleteProduct(${p.ProductID})'>Delete</button>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    async function getProduct(id){
+      const res = await fetch(API_BASE + '/products/' + id, { headers: authHeaders() });
+      const p = await res.json();
+      alert(JSON.stringify(p, null, 2));
+    }
+
+    function showProductForm(){
+      document.getElementById('productForm').classList.remove('hidden');
+      document.getElementById('productFormTitle').textContent = 'Add Product';
+      clearProductForm();
+    }
+    function hideProductForm(){ document.getElementById('productForm').classList.add('hidden'); }
+    function clearProductForm(){ ['p_ProductID','p_ProductName','p_SKU','p_Description','p_QuantityInStock','p_UnitPrice','p_CategoryID','p_SupplierID'].forEach(id=>document.getElementById(id).value=''); }
+
+    async function saveProduct(){
+      const id = document.getElementById('p_ProductID').value;
+      const payload = {
+        ProductName: document.getElementById('p_ProductName').value,
+        SKU: document.getElementById('p_SKU').value,
+        Description: document.getElementById('p_Description').value,
+        QuantityInStock: parseInt(document.getElementById('p_QuantityInStock').value || 0),
+        UnitPrice: parseFloat(document.getElementById('p_UnitPrice').value || 0),
+        CategoryID: parseInt(document.getElementById('p_CategoryID').value || 0),
+        SupplierID: parseInt(document.getElementById('p_SupplierID').value || 0)
+      };
+      try{
+        let res;
+        if(id){
+          res = await fetch(API_BASE + '/products/' + id, { method:'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+        } else {
+          res = await fetch(API_BASE + '/products/', { method:'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+        }
+        if(res.ok){ hideProductForm(); loadProducts(); }
+        else { document.getElementById('productFormMsg').textContent = 'Save failed'; }
+      }catch(e){ document.getElementById('productFormMsg').textContent = 'Error saving'; }
+    }
+
+    async function startEditProduct(id){
+      const res = await fetch(API_BASE + '/products/' + id, { headers: authHeaders() });
+      const p = await res.json();
+      document.getElementById('productForm').classList.remove('hidden');
+      document.getElementById('productFormTitle').textContent = 'Edit Product';
+      document.getElementById('p_ProductID').value = p.ProductID;
+      document.getElementById('p_ProductName').value = p.ProductName || '';
+      document.getElementById('p_SKU').value = p.SKU || '';
+      document.getElementById('p_Description').value = p.Description || '';
+      document.getElementById('p_QuantityInStock').value = p.QuantityInStock || 0;
+      document.getElementById('p_UnitPrice').value = p.UnitPrice || 0;
+      document.getElementById('p_CategoryID').value = (p.Category && p.Category.CategoryID) || '';
+      document.getElementById('p_SupplierID').value = (p.Supplier && p.Supplier.SupplierID) || '';
+    }
+
+    async function deleteProduct(id){
+      if(!confirm('Delete product '+id+'?')) return;
+      const res = await fetch(API_BASE + '/products/' + id, { method:'DELETE', headers: authHeaders() });
+      if(res.ok) loadProducts(); else alert('Delete failed');
+    }
+
+    // ---------- CATEGORIES ----------
+    async function loadCategories(){
+      const res = await fetch(API_BASE + '/categories/', { headers: authHeaders() });
+      const data = await res.json();
+      const container = document.getElementById('categoriesTable');
+      if(!data || !data.length) { container.innerHTML = '<p>No categories</p>'; return; }
+      let html = '<table><thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead><tbody>';
+      data.forEach(c=> html += `<tr><td>${c.CategoryID}</td><td>${escapeHtml(c.CategoryName)}</td><td><button class="btn" onclick='startEditCategory(${c.CategoryID})'>Edit</button><button class="btn" onclick='deleteCategory(${c.CategoryID})'>Delete</button></td></tr>`);
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+    function showCategoryForm(){ document.getElementById('categoryForm').classList.remove('hidden'); document.getElementById('categoryFormTitle').textContent='Add Category'; document.getElementById('c_CategoryID').value=''; document.getElementById('c_CategoryName').value=''; document.getElementById('c_Description').value=''; }
+    function hideCategoryForm(){ document.getElementById('categoryForm').classList.add('hidden'); }
+    async function saveCategory(){
+      const id = document.getElementById('c_CategoryID').value;
+      const payload = { CategoryName: document.getElementById('c_CategoryName').value, Description: document.getElementById('c_Description').value };
+      const res = await fetch(API_BASE + '/categories/' + (id? id : ''), { method: id? 'PUT':'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+      if(res.ok){ hideCategoryForm(); loadCategories(); } else alert('Save failed');
+    }
+    async function startEditCategory(id){ const res = await fetch(API_BASE + '/categories/' + id, { headers: authHeaders() }); const c = await res.json(); document.getElementById('categoryForm').classList.remove('hidden'); document.getElementById('categoryFormTitle').textContent='Edit Category'; document.getElementById('c_CategoryID').value=c.CategoryID; document.getElementById('c_CategoryName').value=c.CategoryName; document.getElementById('c_Description').value=c.Description || ''; }
+    async function deleteCategory(id){ if(!confirm('Delete category '+id+'?')) return; const res = await fetch(API_BASE + '/categories/' + id, { method:'DELETE', headers: authHeaders() }); if(res.ok) loadCategories(); else alert('Delete failed'); }
+
+    // ---------- SUPPLIERS ----------
+    async function loadSuppliers(){ const res = await fetch(API_BASE + '/suppliers/', { headers: authHeaders() }); const data = await res.json(); const container = document.getElementById('suppliersTable'); if(!data || !data.length){ container.innerHTML='<p>No suppliers</p>'; return;} let html='<table><thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Actions</th></tr></thead><tbody>'; data.forEach(s=> html += `<tr><td>${s.SupplierID}</td><td>${escapeHtml(s.SupplierName)}</td><td>${escapeHtml(s.ContactName||'')}</td><td><button class="btn" onclick='startEditSupplier(${s.SupplierID})'>Edit</button><button class="btn" onclick='deleteSupplier(${s.SupplierID})'>Delete</button></td></tr>`); html += '</tbody></table>'; container.innerHTML = html; }
+    function showSupplierForm(){ document.getElementById('supplierForm').classList.remove('hidden'); document.getElementById('supplierFormTitle').textContent='Add Supplier'; ['s_SupplierID','s_SupplierName','s_ContactName','s_Phone','s_Email','s_Address','s_City','s_Country'].forEach(id=>document.getElementById(id).value=''); }
+    function hideSupplierForm(){ document.getElementById('supplierForm').classList.add('hidden'); }
+    async function saveSupplier(){ const id = document.getElementById('s_SupplierID').value; const payload = { SupplierName: document.getElementById('s_SupplierName').value, ContactName: document.getElementById('s_ContactName').value, Phone: document.getElementById('s_Phone').value, Email: document.getElementById('s_Email').value, Address: document.getElementById('s_Address').value, City: document.getElementById('s_City').value, Country: document.getElementById('s_Country').value }; const res = await fetch(API_BASE + '/suppliers/' + (id? id : ''), { method: id? 'PUT':'POST', headers: authHeaders(), body: JSON.stringify(payload) }); if(res.ok){ hideSupplierForm(); loadSuppliers(); } else alert('Save failed'); }
+    async function startEditSupplier(id){ const res = await fetch(API_BASE + '/suppliers/' + id, { headers: authHeaders() }); const s = await res.json(); document.getElementById('supplierForm').classList.remove('hidden'); document.getElementById('supplierFormTitle').textContent='Edit Supplier'; document.getElementById('s_SupplierID').value=s.SupplierID; document.getElementById('s_SupplierName').value=s.SupplierName||''; document.getElementById('s_ContactName').value=s.ContactName||''; document.getElementById('s_Phone').value=s.Phone||''; document.getElementById('s_Email').value=s.Email||''; document.getElementById('s_Address').value=s.Address||''; document.getElementById('s_City').value=s.City||''; document.getElementById('s_Country').value=s.Country||''; }
+    async function deleteSupplier(id){ if(!confirm('Delete supplier '+id+'?')) return; const res = await fetch(API_BASE + '/suppliers/' + id, { method:'DELETE', headers: authHeaders() }); if(res.ok) loadSuppliers(); else alert('Delete failed'); }
+
+    // ---------- USERS ----------
+    async function loadUsers(){ const res = await fetch(API_BASE + '/users/', { headers: authHeaders() }); const data = await res.json(); const container = document.getElementById('usersTable'); if(!data || !data.length){ container.innerHTML='<p>No users</p>'; return;} let html='<table><thead><tr><th>ID</th><th>Name</th><th>Username</th><th>Email</th><th>Actions</th></tr></thead><tbody>'; data.forEach(u=> html += `<tr><td>${u.UserID}</td><td>${escapeHtml(u.FirstName+' '+(u.LastName||''))}</td><td>${escapeHtml(u.Username)}</td><td>${escapeHtml(u.Email)}</td><td><button class="btn" onclick='startEditUser(${u.UserID})'>Edit</button><button class="btn" onclick='deleteUser(${u.UserID})'>Delete</button></td></tr>`); html += '</tbody></table>'; container.innerHTML = html; }
+    function showUserForm(){ document.getElementById('userForm').classList.remove('hidden'); document.getElementById('userFormTitle').textContent='Add User'; ['u_UserID','u_FirstName','u_LastName','u_Email','u_Phone','u_Username','u_Password','u_Role'].forEach(id=>document.getElementById(id).value=''); }
+    function hideUserForm(){ document.getElementById('userForm').classList.add('hidden'); }
+    async function saveUser(){ const id = document.getElementById('u_UserID').value; const payload = { FirstName: document.getElementById('u_FirstName').value, LastName: document.getElementById('u_LastName').value, Email: document.getElementById('u_Email').value, Phone: document.getElementById('u_Phone').value, Username: document.getElementById('u_Username').value, Password: document.getElementById('u_Password').value, Role: document.getElementById('u_Role').value }; const res = await fetch(API_BASE + '/users/' + (id? id : ''), { method: id? 'PUT':'POST', headers: authHeaders(), body: JSON.stringify(payload) }); if(res.ok){ hideUserForm(); loadUsers(); } else alert('Save failed'); }
+    async function startEditUser(id){ const res = await fetch(API_BASE + '/users/' + id, { headers: authHeaders() }); const u = await res.json(); document.getElementById('userForm').classList.remove('hidden'); document.getElementById('userFormTitle').textContent='Edit User'; document.getElementById('u_UserID').value=u.UserID; document.getElementById('u_FirstName').value=u.FirstName||''; document.getElementById('u_LastName').value=u.LastName||''; document.getElementById('u_Email').value=u.Email||''; document.getElementById('u_Phone').value=u.Phone||''; document.getElementById('u_Username').value=u.Username||''; document.getElementById('u_Role').value=u.Role||''; }
+    async function deleteUser(id){ if(!confirm('Delete user '+id+'?')) return; const res = await fetch(API_BASE + '/users/' + id, { method:'DELETE', headers: authHeaders() }); if(res.ok) loadUsers(); else alert('Delete failed'); }
+
+    // ---------- Helpers ----------
+    function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+    // initialize
+    init();
+  </script>
+</body>
+</html>

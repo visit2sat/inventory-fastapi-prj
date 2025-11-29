@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FastAPI Static UI Templates — Products</title>
+  <style>
+    :root{ --bg:#f7f9fc; --card:#fff; --accent:#0b6efd; --muted:#6b7280; font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; }
+    body{ background:var(--bg); margin:20px; }
+    .wrap{ max-width:1100px; margin:0 auto; }
+    .card{ background:var(--card); padding:18px; border-radius:12px; box-shadow:0 6px 20px rgba(16,24,40,0.06); margin-bottom:16px }
+    h1{ margin:0 0 6px 0; font-size:20px }
+    p.lead{ margin:0 0 12px 0; color:var(--muted) }
+    .controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+    input[type=text], input[type=number], select, textarea{ padding:8px 10px; border-radius:8px; border:1px solid #e6e9ef; min-width:160px }
+    textarea{ min-height:80px }
+    button{ padding:8px 12px; border-radius:8px; border:0; cursor:pointer }
+    .btn-primary{ background:var(--accent); color:#fff }
+    .btn-ghost{ background:transparent; border:1px solid #e6e9ef }
+    pre{ background:#f3f4f6; padding:12px; border-radius:8px; overflow:auto; max-height:320px }
+    label{ display:block; font-size:13px; margin:8px 0 4px }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+    .muted{ color:var(--muted); font-size:13px }
+    .warn{ color:#b04; margin-top:8px }
+    .endpoint{ border-left:4px solid #e6e9ef; padding-left:12px }
+    .small{ font-size:13px }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Products — Static UI Templates</h1>
+      <p class="lead">This single static HTML contains one UI template per endpoint in your provided router: <code>GET /</code>, <code>GET /{product_id}</code>, <code>POST /</code>, <code>PUT /{product_id}</code>, <code>DELETE /{product_id}</code>. Use the <strong>API Base URL</strong> field to point to your FastAPI server (or a public tunnel). If the runtime cannot reach <code>localhost</code>, use mock mode.</p>
+
+      <div class="controls">
+        <label for="baseUrl" class="small">API Base URL</label>
+        <input id="baseUrl" type="text" value="http://127.0.0.1:8000" />
+        <button id="listBtn" class="btn-primary">List Products (GET /)</button>
+        <button id="mockBtn" class="btn-ghost">Use Mock Data</button>
+        <button id="clearBtn" class="btn-ghost">Clear Output</button>
+      </div>
+      <div id="warning" class="warn" style="display:none"></div>
+    </div>
+
+    <!-- GET / (List) -->
+    <div class="card endpoint">
+      <h3>GET / — List all products</h3>
+      <p class="muted">Returns a list of products with category and supplier details.</p>
+      <button class="btn-primary" id="getAll">Fetch All Products</button>
+      <h4>Response</h4>
+      <pre id="resList">No data yet.</pre>
+    </div>
+
+    <!-- GET /{id} -->
+    <div class="card endpoint">
+      <h3>GET /{product_id} — Get a single product</h3>
+      <div class="controls">
+        <input id="getId" type="number" placeholder="product_id" />
+        <button id="getOne" class="btn-primary">Fetch</button>
+      </div>
+      <h4>Response</h4>
+      <pre id="resOne">No data yet.</pre>
+    </div>
+
+    <!-- POST / -->
+    <div class="card endpoint">
+      <h3>POST / — Create product</h3>
+      <p class="muted">Fields inferred from sample response. Adjust as needed.</p>
+      <div class="grid">
+        <div>
+          <label>ProductName</label>
+          <input id="create_ProductName" type="text" />
+        </div>
+        <div>
+          <label>SKU</label>
+          <input id="create_SKU" type="text" />
+        </div>
+        <div>
+          <label>Description</label>
+          <textarea id="create_Description"></textarea>
+        </div>
+        <div>
+          <label>QuantityInStock</label>
+          <input id="create_QuantityInStock" type="number" value="0" />
+        </div>
+        <div>
+          <label>UnitPrice</label>
+          <input id="create_UnitPrice" type="number" step="0.01" value="0" />
+        </div>
+        <div>
+          <label>ReorderLevel</label>
+          <input id="create_ReorderLevel" type="number" value="0" />
+        </div>
+        <div>
+          <label>IsActive</label>
+          <select id="create_IsActive"><option value="true">true</option><option value="false">false</option></select>
+        </div>
+        <div>
+          <label>CategoryID</label>
+          <input id="create_CategoryID" type="number" />
+        </div>
+        <div>
+          <label>SupplierID</label>
+          <input id="create_SupplierID" type="number" />
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <button id="createBtn" class="btn-primary">Create Product</button>
+      </div>
+      <h4>Response</h4>
+      <pre id="resCreate">No response.</pre>
+    </div>
+
+    <!-- PUT /{id} -->
+    <div class="card endpoint">
+      <h3>PUT /{product_id} — Update product</h3>
+      <p class="muted">Only include fields you want to change. Fields left blank are not sent.</p>
+      <div class="controls" style="margin-bottom:8px">
+        <input id="update_id" type="number" placeholder="product_id" />
+      </div>
+      <div class="grid">
+        <div>
+          <label>ProductName</label>
+          <input id="update_ProductName" type="text" />
+        </div>
+        <div>
+          <label>SKU</label>
+          <input id="update_SKU" type="text" />
+        </div>
+        <div>
+          <label>Description</label>
+          <textarea id="update_Description"></textarea>
+        </div>
+        <div>
+          <label>QuantityInStock</label>
+          <input id="update_QuantityInStock" type="number" />
+        </div>
+        <div>
+          <label>UnitPrice</label>
+          <input id="update_UnitPrice" type="number" step="0.01" />
+        </div>
+        <div>
+          <label>ReorderLevel</label>
+          <input id="update_ReorderLevel" type="number" />
+        </div>
+        <div>
+          <label>IsActive</label>
+          <select id="update_IsActive"><option value="">-- leave unset --</option><option value="true">true</option><option value="false">false</option></select>
+        </div>
+        <div>
+          <label>CategoryID</label>
+          <input id="update_CategoryID" type="number" />
+        </div>
+        <div>
+          <label>SupplierID</label>
+          <input id="update_SupplierID" type="number" />
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <button id="updateBtn" class="btn-primary">Update Product</button>
+      </div>
+      <h4>Response</h4>
+      <pre id="resUpdate">No response.</pre>
+    </div>
+
+    <!-- DELETE /{id} -->
+    <div class="card endpoint">
+      <h3>DELETE /{product_id} — Delete product</h3>
+      <div class="controls">
+        <input id="del_id" type="number" placeholder="product_id" />
+        <button id="delBtn" class="btn-ghost">Delete</button>
+      </div>
+      <h4>Response</h4>
+      <pre id="resDelete">No response.</pre>
+    </div>
+
+    <div class="card">
+      <h3>Notes</h3>
+      <ul>
+        <li>This template infers request bodies from your sample response. If your Pydantic models differ, adjust the form fields accordingly.</li>
+        <li>If you run into <code>TypeError: Failed to fetch</code>, your environment likely cannot access <code>localhost</code>. Use a public URL (ngrok) or open the HTML from the same host as the API.</li>
+        <li>Enable CORS in FastAPI to allow this static page to call the API from another origin:</li>
+      </ul>
+      <pre>
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=["*"],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
+      </pre>
+    </div>
+  </div>
+
+  <script>
+    // Mock data (from the response you pasted)
+    const MOCK = [
+      { ProductID:1, ProductName:'Wireless Mouse', SKU:'WM-1001', Description:'Ergonomic wireless mouse', QuantityInStock:120, UnitPrice:899.99, ReorderLevel:20, IsActive:true, Category:{CategoryID:1, CategoryName:'Electronics'}, Supplier:{SupplierID:1, SupplierName:'TechWorld Distributors'} },
+      { ProductID:2, ProductName:'Office Chair', SKU:'OC-2001', Description:'Adjustable office chair', QuantityInStock:50, UnitPrice:4999, ReorderLevel:10, IsActive:true, Category:{CategoryID:2, CategoryName:'Furniture'}, Supplier:{SupplierID:2, SupplierName:'Comfort Furnishings Ltd'} },
+      { ProductID:3, ProductName:'Notebook A5', SKU:'NB-3001', Description:'Ruled notebook', QuantityInStock:300, UnitPrice:99, ReorderLevel:50, IsActive:true, Category:{CategoryID:3, CategoryName:'Stationery'}, Supplier:{SupplierID:3, SupplierName:'EduSupplies Co.'} }
+    ];
+
+    // Helpers
+    const baseUrlEl = document.getElementById('baseUrl');
+    const warningEl = document.getElementById('warning');
+    function baseUrl(){
+      return baseUrlEl.value.replace(/\/$/, '');
+    }
+    function showWarning(msg){ warningEl.style.display='block'; warningEl.textContent=msg }
+    function hideWarning(){ warningEl.style.display='none'; }
+    function pretty(obj){ return typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2); }
+
+    function checkLocalhost(u){ try{ const url=new URL(u); return ['localhost','127.0.0.1','::1'].includes(url.hostname); }catch(e){ return false } }
+
+    async function request(path, opts={}){
+      const url = baseUrl() + path;
+      if (checkLocalhost(url)) showWarning('Warning: runtime may not be able to reach localhost. Use mock mode if request fails.'); else hideWarning();
+      try{
+        const res = await fetch(url, opts);
+        if (!res.ok){ const txt = await res.text().catch(()=>'<no text>'); throw new Error(`HTTP ${res.status} ${res.statusText} — ${txt}`); }
+        if (res.status === 204) return null; // no content
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('application/json')) return await res.json();
+        return await res.text();
+      }catch(err){ throw err }
+    }
+
+    // GET all
+    document.getElementById('getAll').addEventListener('click', async ()=>{
+      const out = document.getElementById('resList');
+      out.textContent = 'Loading...';
+      try{
+        const data = await request('/');
+        out.textContent = pretty(data);
+      }catch(err){ out.textContent = `Request failed: ${err.message}
+
+Using mock data...
+` + pretty(MOCK); }
+    });
+
+    // List top button
+    document.getElementById('listBtn').addEventListener('click', ()=> document.getElementById('getAll').click());
+
+    // GET one
+    document.getElementById('getOne').addEventListener('click', async ()=>{
+      const id = document.getElementById('getId').value;
+      const out = document.getElementById('resOne');
+      if (!id){ out.textContent='Enter product_id'; return }
+      out.textContent='Loading...';
+      try{
+        const data = await request(`/${id}`);
+        out.textContent = pretty(data);
+      }catch(err){ out.textContent = `Request failed: ${err.message}
+
+Using mock data...
+` + pretty(MOCK.find(p=>p.ProductID==id) || null); }
+    });
+
+    // Create
+    document.getElementById('createBtn').addEventListener('click', async ()=>{
+      const out = document.getElementById('resCreate');
+      const body = {
+        ProductName: document.getElementById('create_ProductName').value,
+        SKU: document.getElementById('create_SKU').value,
+        Description: document.getElementById('create_Description').value,
+        QuantityInStock: Number(document.getElementById('create_QuantityInStock').value || 0),
+        UnitPrice: Number(document.getElementById('create_UnitPrice').value || 0),
+        ReorderLevel: Number(document.getElementById('create_ReorderLevel').value || 0),
+        IsActive: document.getElementById('create_IsActive').value === 'true',
+        CategoryID: Number(document.getElementById('create_CategoryID').value || 0),
+        SupplierID: Number(document.getElementById('create_SupplierID').value || 0)
+      };
+      out.textContent = 'Creating...';
+      try{
+        const data = await request('/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        out.textContent = pretty(data);
+      }catch(err){ out.textContent = `Request failed: ${err.message}
+
+(Your server may be unreachable)
+` + pretty(body); }
+    });
+
+    // Update
+    document.getElementById('updateBtn').addEventListener('click', async ()=>{
+      const id = document.getElementById('update_id').value;
+      const out = document.getElementById('resUpdate');
+      if (!id){ out.textContent='Enter product_id'; return }
+      // Build partial body (exclude empty fields)
+      const fields = ['ProductName','SKU','Description','QuantityInStock','UnitPrice','ReorderLevel','IsActive','CategoryID','SupplierID'];
+      const body = {};
+      fields.forEach(f=>{
+        const el = document.getElementById('update_' + f);
+        if (!el) return;
+        const v = el.value;
+        if (v === null || v === undefined || v === '') return;
+        if (['QuantityInStock','UnitPrice','ReorderLevel','CategoryID','SupplierID'].includes(f)) body[f] = Number(v);
+        else if (f === 'IsActive') body[f] = (v === 'true');
+        else body[f] = v;
+      });
+      out.textContent = 'Updating...';
+      try{
+        const data = await request(`/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        out.textContent = pretty(data);
+      }catch(err){ out.textContent = `Request failed: ${err.message}
+
+Tried to update with:
+` + pretty(body); }
+    });
+
+    // Delete
+    document.getElementById('delBtn').addEventListener('click', async ()=>{
+      const id = document.getElementById('del_id').value;
+      const out = document.getElementById('resDelete');
+      if (!id){ out.textContent='Enter product_id'; return }
+      if (!confirm('Delete product ' + id + '?')) return;
+      out.textContent = 'Deleting...';
+      try{
+        await request(`/${id}`, { method:'DELETE' });
+        out.textContent = 'Deleted (server returned 204 No Content)';
+      }catch(err){ out.textContent = `Request failed: ${err.message}`; }
+    });
+
+    // Mock / Clear
+    document.getElementById('mockBtn').addEventListener('click', ()=>{
+      document.getElementById('resList').textContent = pretty(MOCK);
+      document.getElementById('resOne').textContent = 'Use GET /{id}';
+      document.getElementById('resCreate').textContent = 'Use create form';
+    });
+    document.getElementById('clearBtn').addEventListener('click', ()=>{
+      document.getElementById('resList').textContent='Cleared'; document.getElementById('resOne').textContent='Cleared'; document.getElementById('resCreate').textContent='Cleared'; document.getElementById('resUpdate').textContent='Cleared'; document.getElementById('resDelete').textContent='Cleared';
+    });
+
+  </script>
+</body>
+</html>
